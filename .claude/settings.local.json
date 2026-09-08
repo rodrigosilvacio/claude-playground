@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node scripts/validate_palette.js \"#B9DA00,#1E7FB5,#5C9E3A\" --mode light)",
+      "Bash(node scripts/validate_palette.js \"#B9DA00,#4FA9DC,#94C356\" --mode dark)",
+      "Bash(node scripts/validate_palette.js \"#A2C000,#3593C9,#7DAF43\" --mode dark)",
+      "Bash(node scripts/validate_palette.js \"#93AE00,#3593C9,#6E9C3A\" --mode dark)",
+      "Bash(node -e ' *)",
+      "Bash(node scripts/validate_palette.js \"#88A100,#3593C9,#6E9C3A\" --mode dark)",
+      "Bash(python3 -)",
+      "Bash(cp /private/tmp/claude-501/-Users-rodrigosilva-Documents-ClaudeProjects-Playground/680a885a-5600-4cdf-ae91-320c995bafdc/scratchpad/nitro-drinks-dashboard.html /Users/rodrigosilva/Documents/ClaudeProjects/Playground/dashboard-bebidas.html && ls -la /Users/rodrigosilva/Documents/ClaudeProjects/Playground)",
+      "Bash(python3 -c ' *)",
+      "Bash(file -I /Users/rodrigosilva/Documents/ClaudeProjects/Playground/dashboard-bebidas.html)",
+      "Bash(xxd)"
+    ]
+  }
+}

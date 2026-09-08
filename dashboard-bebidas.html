@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panorama do Álcool</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --ink:#0C2436; --ink-2:#415D74; --ink-3:#71889A;
+  --bg:#EEF2F5; --surface:#FFFFFF; --surface-2:#F6F9FB;
+  --line:#D8E1E8; --line-soft:#E7EDF2;
+  --navy:#003663; --navy-deep:#00243F; --citron:#B9DA00; --chartreuse:#94C356;
+  --s-beer:#8FA800; --s-spirit:#1E7FB5; --s-wine:#5C9E3A;
+  --accent-ink:#003663; --on-navy:#E6EEF4; --on-navy-2:#9FB8CC;
+  --focus:#B9DA00;
+  --shadow:0 1px 2px rgba(12,36,54,.06), 0 8px 28px -18px rgba(12,36,54,.35);
+  --r:14px;
+  /* logotipo Nitro (extraído do brand book) — silhueta em alfa, usada como máscara */
+  --logo-nitro:url("data:image/png;base64,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");
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#E7EEF3; --ink-2:#A5B8C5; --ink-3:#7C8F9C;
+    --bg:#0B1720; --surface:#12222D; --surface-2:#182B38;
+    --line:#223A49; --line-soft:#1C303D;
+    --navy:#0C2E4C; --navy-deep:#081D30; --on-navy:#E7EEF3; --on-navy-2:#9FB8CC;
+    --s-beer:#88A100; --s-spirit:#3593C9; --s-wine:#6E9C3A;
+    --accent-ink:#B9DA00;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#E7EEF3; --ink-2:#A5B8C5; --ink-3:#7C8F9C;
+  --bg:#0B1720; --surface:#12222D; --surface-2:#182B38;
+  --line:#223A49; --line-soft:#1C303D;
+  --navy:#0C2E4C; --navy-deep:#081D30; --on-navy:#E7EEF3; --on-navy-2:#9FB8CC;
+  --s-beer:#88A100; --s-spirit:#3593C9; --s-wine:#6E9C3A;
+  --accent-ink:#B9DA00;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Poppins",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0; text-wrap:balance; font-weight:600; letter-spacing:-.015em}
+.wrap{max-width:1220px; margin:0 auto; padding:0 24px}
+
+/* ---------- masthead ---------- */
+.masthead{background:var(--navy); color:var(--on-navy); border-bottom:3px solid var(--citron)}
+.masthead .wrap{display:flex; gap:28px; align-items:flex-end; justify-content:space-between;
+  flex-wrap:wrap; padding-top:26px; padding-bottom:26px}
+.brandmark{display:flex; align-items:center; gap:14px; margin-bottom:12px}
+/* logotipo Nitro — PNG branco usado como máscara, herda currentColor */
+.brandmark .logo{
+  width:88px; height:30px; flex:none; display:block; color:#fff;
+  background:currentColor;
+  -webkit-mask:var(--logo-nitro) no-repeat center/contain;
+  mask:var(--logo-nitro) no-repeat center/contain}
+.brandmark .rule{width:1px; height:20px; background:var(--on-navy-2); opacity:.35; flex:none}
+.brandmark span{font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--on-navy-2); font-weight:500}
+@media (max-width:520px){.brandmark span{letter-spacing:.14em; font-size:10px}}
+.masthead h1{font-size:clamp(26px,3.4vw,38px); color:#fff; font-weight:600}
+.masthead p{margin:8px 0 0; max-width:52ch; color:var(--on-navy-2); font-size:13.5px; font-weight:300}
+
+.importzone{display:flex; flex-direction:column; gap:10px; align-items:flex-end}
+.btn{
+  border:0; border-radius:999px; padding:12px 22px; cursor:pointer;
+  font-family:inherit; font-size:14px; font-weight:600; letter-spacing:.01em;
+  background:var(--citron); color:#132400; display:inline-flex; align-items:center; gap:9px;
+  transition:transform .12s ease, filter .12s ease;
+}
+.btn:hover{filter:brightness(1.07)} .btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent; color:var(--on-navy); border:1px solid rgba(255,255,255,.28); font-weight:500; padding:9px 16px; font-size:13px}
+.btn.ghost:hover{background:rgba(255,255,255,.08)}
+.btn.small{padding:8px 15px; font-size:12.5px}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.filemeta{font-size:12px; color:var(--on-navy-2); display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+.filemeta strong{color:#fff; font-weight:500}
+
+/* ---------- empty state ---------- */
+.dropzone{
+  margin:56px auto; max-width:720px; background:var(--surface); border-radius:var(--r);
+  border:2px dashed var(--line); box-shadow:var(--shadow);
+  padding:48px 40px; text-align:center; transition:border-color .15s, background .15s;
+}
+.dropzone.hot{border-color:var(--citron); background:var(--surface-2)}
+.dropzone h2{font-size:20px}
+.dropzone p{color:var(--ink-2); margin:10px auto 26px; max-width:46ch}
+.schema{
+  margin-top:30px; padding-top:22px; border-top:1px solid var(--line-soft);
+  text-align:left; display:grid; gap:7px;
+}
+.schema b{font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+.schema div{display:flex; gap:12px; align-items:baseline; font-size:12.5px; color:var(--ink-2)}
+.schema code{color:var(--ink); background:var(--surface-2); border:1px solid var(--line-soft);
+  border-radius:6px; padding:2px 7px; font-family:"JetBrains Mono",monospace; font-size:11.5px}
+.err{margin-top:22px; border-left:3px solid #C0392B; background:rgba(192,57,43,.07);
+  padding:12px 16px; text-align:left; border-radius:0 8px 8px 0; font-size:13px; color:var(--ink)}
+
+/* ---------- panel ---------- */
+main{padding-bottom:72px}
+.hidden{display:none !important}
+
+.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:1px;
+  background:var(--line-soft); border:1px solid var(--line); border-radius:var(--r);
+  overflow:hidden; margin-top:32px; box-shadow:var(--shadow)}
+.kpi{background:var(--surface); padding:20px 22px; display:flex; flex-direction:column; gap:5px}
+.kpi .k{font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+.kpi .v{font-size:30px; font-weight:600; letter-spacing:-.03em; line-height:1.1}
+.kpi .v small{font-size:14px; font-weight:400; color:var(--ink-2); letter-spacing:0}
+.kpi .s{font-size:12px; color:var(--ink-2)}
+
+.grid{display:grid; grid-template-columns:1.05fr .95fr; gap:20px; margin-top:20px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  padding:22px; box-shadow:var(--shadow); min-width:0}
+.card > header{display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+  flex-wrap:wrap; margin-bottom:6px}
+.card h2{font-size:15.5px}
+.card .sub{font-size:12.5px; color:var(--ink-2); margin:2px 0 16px; max-width:60ch}
+.chart-scroll{overflow-x:auto}
+
+.chips{display:flex; gap:6px; flex-wrap:wrap}
+.chip{border:1px solid var(--line); background:transparent; color:var(--ink-2);
+  border-radius:999px; padding:5px 13px; font-size:12px; font-family:inherit; cursor:pointer; font-weight:500}
+.chip:hover{border-color:var(--ink-3)}
+.chip[aria-pressed="true"]{background:var(--navy); border-color:var(--navy); color:#fff}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{background:var(--citron); color:#132400; border-color:var(--citron)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{background:var(--citron); color:#132400; border-color:var(--citron)}}
+
+.legend{display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--ink-2); margin-bottom:14px}
+.legend i{width:10px; height:10px; border-radius:3px; display:inline-block; margin-right:6px; vertical-align:-1px}
+
+svg{display:block; max-width:100%}
+svg text{fill:var(--ink-2); font-family:"JetBrains Mono",monospace}
+.axis line, .axis path{stroke:var(--line)}
+.gridline{stroke:var(--line-soft)}
+
+/* ---------- table ---------- */
+.tablecard{margin-top:20px}
+.tools{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+input[type=search]{
+  font-family:inherit; font-size:13px; padding:9px 14px; border-radius:999px;
+  border:1px solid var(--line); background:var(--surface-2); color:var(--ink); min-width:220px}
+input[type=search]::placeholder{color:var(--ink-3)}
+.tablebox{overflow:auto; max-height:520px; border:1px solid var(--line-soft); border-radius:10px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+thead th{position:sticky; top:0; background:var(--surface-2); z-index:1;
+  text-align:right; padding:10px 14px; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-3); font-weight:600; border-bottom:1px solid var(--line); cursor:pointer; white-space:nowrap}
+thead th:first-child{text-align:left}
+thead th[aria-sort]{color:var(--ink)}
+tbody td{padding:0 14px; border-bottom:1px solid var(--line-soft); text-align:right; height:34px}
+tbody td:first-child{text-align:left; font-weight:500}
+tbody tr:hover{background:var(--surface-2)}
+.bar{position:relative}
+.bar em{position:absolute; left:0; top:50%; transform:translateY(-50%); height:18px;
+  border-radius:0 3px 3px 0; opacity:.2}
+.bar span{position:relative}
+.rowtot{color:var(--ink)}
+.foot{margin-top:14px; font-size:11.5px; color:var(--ink-3); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
+.tip{position:fixed; pointer-events:none; z-index:50; background:var(--navy-deep); color:#fff;
+  border-radius:8px; padding:9px 12px; font-size:12px; line-height:1.5; box-shadow:0 10px 30px -10px rgba(0,0,0,.6);
+  opacity:0; transition:opacity .1s}
+.tip.on{opacity:1}
+.tip b{display:block; font-size:12.5px; margin-bottom:4px; color:#fff}
+.tip i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:6px}
+/* ---------- rodapé ---------- */
+.sitefoot{margin-top:48px; padding:26px 0 34px; background:var(--navy); color:var(--on-navy-2);
+  border-top:3px solid var(--citron)}
+.sitefoot .wrap{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap}
+.sitefoot .who{display:flex; align-items:center; gap:14px}
+.sitefoot .logo{
+  width:70px; height:24px; flex:none; display:block; color:#fff;
+  background:currentColor;
+  -webkit-mask:var(--logo-nitro) no-repeat center/contain;
+  mask:var(--logo-nitro) no-repeat center/contain}
+.sitefoot .rule{width:1px; height:18px; background:var(--on-navy-2); opacity:.35; flex:none}
+.sitefoot p{margin:0; font-size:12.5px}
+.sitefoot b{color:#fff; font-weight:500}
+
+/* ---------- botão flutuante de suporte (WhatsApp) ---------- */
+.wa{
+  position:fixed; right:22px; bottom:22px; z-index:60;
+  display:flex; align-items:center; gap:10px;
+  height:56px; padding:0 18px 0 16px; border-radius:999px;
+  background:#25D366; color:#fff; text-decoration:none;
+  font-size:14px; font-weight:500; white-space:nowrap;
+  box-shadow:0 6px 16px -4px rgba(0,0,0,.3), 0 12px 34px -12px rgba(37,211,102,.9);
+  transition:transform .15s ease, box-shadow .15s ease}
+.wa svg{flex:none}
+.wa:hover{transform:translateY(-2px); box-shadow:0 10px 22px -6px rgba(0,0,0,.35), 0 18px 44px -14px rgba(37,211,102,.95)}
+.wa:focus-visible{outline:3px solid var(--focus); outline-offset:3px}
+@media (max-width:640px){
+  .wa{padding:0; width:56px; justify-content:center}
+  .wa .lbl{display:none}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important}}
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <div>
+      <div class="brandmark">
+        <i class="logo" role="img" aria-label="Nitro"></i>
+        <i class="rule" aria-hidden="true"></i>
+        <span>Estudo de Bebidas Alcoólicas</span>
+      </div>
+      <h1>Panorama do Álcool</h1>
+      <p>Consumo por país em doses anuais per capita de cerveja, destilados e vinho, e o total convertido em litros de álcool puro.</p>
+    </div>
+    <div class="importzone">
+      <button class="btn" id="btnImport" title="Recarregar dados">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+        Atualizar dados
+      </button>
+      <div class="filemeta hidden" id="fileMeta"></div>
+    </div>
+  </div>
+</header>
+
+<input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm,.csv,.tsv,.txt" class="hidden">
+
+<main class="wrap">
+  <section class="dropzone" id="dropzone">
+    <h2>Comece importando a planilha do estudo</h2>
+    <p>Arraste o arquivo aqui ou use o botão <strong>Importar planilha</strong>. Aceita <code>.xlsx</code>, <code>.xls</code> e <code>.csv</code>. Nada é enviado para servidor algum — a leitura acontece no seu navegador.</p>
+    <button class="btn" id="btnImport2">Escolher arquivo</button>
+    <div class="schema">
+      <b>Colunas esperadas</b>
+      <div><code>country</code> nome do país (obrigatória)</div>
+      <div><code>beer_servings</code> doses de cerveja por ano</div>
+      <div><code>spirit_servings</code> doses de destilados por ano</div>
+      <div><code>wine_servings</code> doses de vinho por ano</div>
+      <div><code>total_litres_of_pure_alcohol</code> litros de álcool puro</div>
+    </div>
+    <div class="err hidden" id="errBox"></div>
+  </section>
+
+  <div id="panel" class="hidden">
+    <section class="kpis" id="kpis"></section>
+
+    <div class="grid">
+      <section class="card">
+        <header>
+          <div><h2>Os 15 maiores consumidores</h2></div>
+          <div class="chips" id="metricChips"></div>
+        </header>
+        <p class="sub" id="rankSub"></p>
+        <div class="chart-scroll"><div id="chartRank"></div></div>
+      </section>
+
+      <section class="card">
+        <header><div><h2>O que cada país bebe</h2></div></header>
+        <p class="sub">Composição das doses entre os 12 países de maior consumo total de álcool puro. Segmentos abaixo de 8% ficam sem rótulo.</p>
+        <div class="legend">
+          <span><i style="background:var(--s-beer)"></i>Cerveja</span>
+          <span><i style="background:var(--s-spirit)"></i>Destilados</span>
+          <span><i style="background:var(--s-wine)"></i>Vinho</span>
+        </div>
+        <div class="chart-scroll"><div id="chartMix"></div></div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:20px">
+      <header><div><h2>Doses bebidas × álcool que elas representam</h2></div></header>
+      <p class="sub">Cada ponto é um país. A linha é a tendência do conjunto: quem fica acima bebe menos doses porém mais fortes; quem fica abaixo, o contrário.</p>
+      <div class="chart-scroll"><div id="chartScatter"></div></div>
+    </section>
+
+    <section class="card tablecard">
+      <header>
+        <div><h2>Base completa</h2><p class="sub" id="tableSub"></p></div>
+        <div class="tools">
+          <input type="search" id="search" placeholder="Buscar país…" aria-label="Buscar país">
+        </div>
+      </header>
+      <div class="tablebox"><table id="table"><thead></thead><tbody></tbody></table></div>
+      <div class="foot">
+        <span id="footCount"></span>
+        <span>Doses = porções anuais per capita. Clique nos cabeçalhos para ordenar.</span>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="sitefoot">
+  <div class="wrap">
+    <div class="who">
+      <i class="logo" role="img" aria-label="Nitro"></i>
+      <i class="rule" aria-hidden="true"></i>
+      <p>Autor — <b>Rodrigo Silva</b></p>
+    </div>
+  </div>
+</footer>
+
+<a class="wa" id="btnSuporte"
+   href="https://wa.me/5511940207654?text=Ol%C3%A1%21%20Preciso%20de%20suporte%20com%20o%20dashboard%20Panorama%20do%20%C3%81lcool."
+   target="_blank" rel="noopener noreferrer"
+   aria-label="Suporte via WhatsApp" title="Suporte via WhatsApp">
+  <svg width="26" height="26" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+    <path d="M16.04 3.2c-7.06 0-12.8 5.74-12.8 12.8 0 2.26.6 4.47 1.73 6.41L3.2 28.8l6.56-1.72a12.75 12.75 0 0 0 6.28 1.64h.01c7.05 0 12.79-5.74 12.79-12.8 0-3.42-1.33-6.63-3.74-9.05a12.71 12.71 0 0 0-9.06-3.67Zm0 23.35h-.01c-1.9 0-3.77-.51-5.4-1.48l-.39-.23-4.02 1.05 1.07-3.92-.25-.4a10.6 10.6 0 0 1-1.63-5.67c0-5.86 4.77-10.63 10.64-10.63 2.84 0 5.5 1.11 7.51 3.12a10.55 10.55 0 0 1 3.11 7.52c0 5.87-4.77 10.64-10.63 10.64Zm5.83-7.97c-.32-.16-1.89-.93-2.18-1.04-.29-.11-.5-.16-.71.16-.21.32-.82 1.04-1 1.25-.19.21-.37.24-.69.08-.32-.16-1.35-.5-2.57-1.59-.95-.85-1.59-1.89-1.78-2.21-.18-.32-.02-.5.14-.66.15-.14.32-.37.48-.56.16-.19.21-.32.32-.53.11-.21.05-.4-.03-.56-.08-.16-.71-1.73-.98-2.36-.26-.62-.52-.54-.71-.55l-.61-.01c-.21 0-.56.08-.85.4-.29.32-1.11 1.09-1.11 2.65s1.14 3.08 1.3 3.29c.16.21 2.24 3.42 5.43 4.8.76.33 1.35.52 1.81.67.76.24 1.45.21 2 .13.61-.09 1.89-.77 2.15-1.52.27-.75.27-1.38.19-1.52-.08-.13-.29-.21-.61-.37Z"/>
+  </svg>
+  <span class="lbl">Suporte</span>
+</a>
+
+<div class="tip" id="tip" role="status"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  const $ = s => document.querySelector(s);
+  const svgNS = "http://www.w3.org/2000/svg";
+  const FIELDS = [
+    { key:"beer",   label:"Cerveja",    col:"var(--s-beer)"   },
+    { key:"spirit", label:"Destilados", col:"var(--s-spirit)" },
+    { key:"wine",   label:"Vinho",      col:"var(--s-wine)"   }
+  ];
+  const METRICS = [
+    { key:"total",  label:"Álcool puro", unit:"L",     col:"var(--navy)"     },
+    { key:"beer",   label:"Cerveja",     unit:"doses", col:"var(--s-beer)"   },
+    { key:"spirit", label:"Destilados",  unit:"doses", col:"var(--s-spirit)" },
+    { key:"wine",   label:"Vinho",       unit:"doses", col:"var(--s-wine)"   }
+  ];
+
+  let rows = [];              // dados importados — única fonte de verdade
+  let metric = "total";
+  let sortKey = "total", sortDir = -1;
+  let query = "";
+
+  const fmt = (n, d=0) => n.toLocaleString("pt-BR", {minimumFractionDigits:d, maximumFractionDigits:d});
+
+  /* ---------- 1. importação ---------- */
+
+  const norm = s => String(s).toLowerCase().normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+
+  const MATCH = {
+    country:["country","pais","paises","nome","name","nation","territorio"],
+    beer:["beerservings","beer","cerveja","cervejas","dosesdecerveja"],
+    spirit:["spiritservings","spirit","spirits","destilado","destilados","licor","licores"],
+    wine:["wineservings","wine","vinho","vinhos"],
+    total:["totallitresofpurealcohol","totallitrespurealcohol","purealcohol","alcoolpuro",
+           "litrosdealcoolpuro","totaldealcoolpuro","total"]
+  };
+
+  function detect(headers){
+    const found = {}; const used = new Set();
+    for (const [field, aliases] of Object.entries(MATCH)){
+      for (const h of headers){
+        const n = norm(h);
+        if (used.has(h)) continue;
+        if (aliases.includes(n) || aliases.some(a => n.includes(a))){ found[field] = h; used.add(h); break; }
+      }
+    }
+    return found;
+  }
+
+  const toNum = v => {
+    if (typeof v === "number") return isFinite(v) ? v : 0;
+    if (v == null || v === "") return 0;
+    const n = parseFloat(String(v).replace(/\s/g,"").replace(/\.(?=\d{3}\b)/g,"").replace(",","."));
+    return isFinite(n) ? n : 0;
+  };
+
+  function showError(msg){
+    const box = $("#errBox");
+    box.innerHTML = msg;
+    box.classList.remove("hidden");
+    $("#dropzone").classList.remove("hidden");
+    $("#panel").classList.add("hidden");
+  }
+
+  function readFile(file){
+    const reader = new FileReader();
+    reader.onload = e => {
+      let sheetRows;
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type:"array", raw:false });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        sheetRows = XLSX.utils.sheet_to_json(sheet, { defval:"" });
+      } catch (err){
+        showError("<strong>Não foi possível ler o arquivo.</strong> Verifique se é uma planilha .xlsx, .xls ou .csv válida. (" + err.message + ")");
+        return;
+      }
+      if (!sheetRows.length){ showError("<strong>A primeira aba da planilha está vazia.</strong> Importe um arquivo com cabeçalho e ao menos uma linha de dados."); return; }
+
+      const headers = Object.keys(sheetRows[0]);
+      const map = detect(headers);
+      if (!map.country){
+        showError("<strong>Coluna de país não encontrada.</strong> Cabeçalhos lidos: <code>" +
+          headers.join("</code>, <code>") + "</code>. Renomeie a coluna de países para <code>country</code> e importe de novo.");
+        return;
+      }
+      if (!map.beer && !map.spirit && !map.wine && !map.total){
+        showError("<strong>Nenhuma coluna numérica reconhecida.</strong> Cabeçalhos lidos: <code>" +
+          headers.join("</code>, <code>") + "</code>. Esperado <code>beer_servings</code>, <code>spirit_servings</code>, <code>wine_servings</code> ou <code>total_litres_of_pure_alcohol</code>.");
+        return;
+      }
+
+      rows = sheetRows.map(r => {
+        const beer = map.beer ? toNum(r[map.beer]) : 0;
+        const spirit = map.spirit ? toNum(r[map.spirit]) : 0;
+        const wine = map.wine ? toNum(r[map.wine]) : 0;
+        return {
+          country: String(r[map.country]).trim(),
+          beer, spirit, wine,
+          servings: beer + spirit + wine,
+          total: map.total ? toNum(r[map.total]) : 0
+        };
+      }).filter(r => r.country);
+
+      if (!rows.length){ showError("<strong>Nenhuma linha com país preenchido.</strong> Confira a coluna <code>" + map.country + "</code>."); return; }
+
+      $("#errBox").classList.add("hidden");
+      $("#dropzone").classList.add("hidden");
+      $("#panel").classList.remove("hidden");
+      $("#fileMeta").classList.remove("hidden");
+      $("#fileMeta").innerHTML =
+        '<span><strong>' + file.name.replace(/</g,"&lt;") + '</strong> · ' + fmt(rows.length) + ' países lidos</span>' +
+        '<button class="btn ghost small" id="btnSwap">Trocar arquivo</button>';
+      $("#btnSwap").addEventListener("click", () => $("#fileInput").click());
+      renderAll();
+      $("#panel").scrollIntoView({ behavior:"smooth", block:"start" });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  $("#btnImport").addEventListener("click", () => { if (rows.length) renderAll(); });
+  $("#btnImport2").addEventListener("click", () => $("#fileInput").click());
+  $("#fileInput").addEventListener("change", e => { if (e.target.files[0]) readFile(e.target.files[0]); e.target.value=""; });
+
+  const dz = $("#dropzone");
+  ["dragenter","dragover"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("hot"); }));
+  ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("hot"); }));
+  dz.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) readFile(f); });
+
+  /* ---------- 2. tooltip ---------- */
+  const tip = $("#tip");
+  function showTip(e, html){
+    tip.innerHTML = html; tip.classList.add("on");
+    const r = tip.getBoundingClientRect();
+    let x = e.clientX + 14, y = e.clientY - r.height - 12;
+    if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+    if (y < 8) y = e.clientY + 18;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  const hideTip = () => tip.classList.remove("on");
+  addEventListener("scroll", hideTip, true);
+
+  function el(name, attrs, text){
+    const n = document.createElementNS(svgNS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function newSvg(w, h){
+    const s = el("svg", { viewBox:"0 0 "+w+" "+h, width:w, height:h, role:"img" });
+    return s;
+  }
+  function niceMax(v){
+    if (v <= 0) return 1;
+    const p = Math.pow(10, Math.floor(Math.log10(v)));
+    const n = v / p;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
+  }
+
+  /* ---------- 3. KPIs ---------- */
+  function renderKpis(){
+    const n = rows.length;
+    const avg = rows.reduce((s,r) => s + r.total, 0) / n;
+    const top = rows.reduce((a,b) => b.total > a.total ? b : a);
+    const dry = rows.filter(r => r.servings === 0).length;
+    const sums = FIELDS.map(f => rows.reduce((s,r) => s + r[f.key], 0));
+    const tot = sums.reduce((a,b) => a+b, 0) || 1;
+    const mix = FIELDS.map((f,i) => ({ ...f, pct: sums[i]/tot*100 }));
+    const lead = mix.reduce((a,b) => b.pct > a.pct ? b : a);
+
+    $("#kpis").innerHTML = [
+      ['Países na base', fmt(n), dry + ' sem consumo registrado'],
+      ['Média de álcool puro', fmt(avg,1) + ' <small>L/ano</small>', 'per capita, média simples entre países'],
+      ['Maior consumo', top.country, fmt(top.total,1) + ' L de álcool puro por ano'],
+      ['Bebida dominante', lead.label, mix.map(m => m.label.slice(0,3) + ' ' + fmt(m.pct) + '%').join(' · ')]
+    ].map(([k,v,s]) =>
+      '<div class="kpi"><div class="k">'+k+'</div><div class="v num">'+v+'</div><div class="s num">'+s+'</div></div>'
+    ).join("");
+  }
+
+  /* ---------- 4. ranking ---------- */
+  function renderChips(){
+    $("#metricChips").innerHTML = METRICS.map(m =>
+      '<button class="chip" data-m="'+m.key+'" aria-pressed="'+(m.key===metric)+'">'+m.label+'</button>').join("");
+    $("#metricChips").querySelectorAll(".chip").forEach(c =>
+      c.addEventListener("click", () => { metric = c.dataset.m; renderChips(); renderRank(); }));
+  }
+
+  function renderRank(){
+    const m = METRICS.find(x => x.key === metric);
+    $("#rankSub").textContent = m.key === "total"
+      ? "Litros de álcool puro consumidos por pessoa em um ano."
+      : "Doses de " + m.label.toLowerCase() + " por pessoa em um ano.";
+
+    const data = [...rows].sort((a,b) => b[metric] - a[metric]).slice(0,15);
+    const W = 560, rowH = 26, padT = 24, padL = 158, padR = 58;
+    const H = padT + data.length*rowH + 14;
+    const max = niceMax(Math.max(...data.map(d => d[metric]), 1));
+    const plotW = W - padL - padR;
+    const x = v => v / max * plotW;
+
+    const s = newSvg(W, H);
+    s.setAttribute("aria-label", "Top 15 países por " + m.label);
+    for (let i = 0; i <= 4; i++){
+      const gx = padL + plotW*i/4;
+      s.appendChild(el("line", { x1:gx, y1:padT-8, x2:gx, y2:H-14, class:"gridline", "stroke-width":1 }));
+      s.appendChild(el("text", { x:gx, y:padT-14, "text-anchor":"middle", "font-size":10 }, fmt(max*i/4, max<20?1:0)));
+    }
+    data.forEach((d,i) => {
+      const y = padT + i*rowH;
+      const w = Math.max(x(d[metric]), 2);
+      const g = el("g", {});
+      g.appendChild(el("text", { x:padL-12, y:y+14, "text-anchor":"end", "font-size":11, fill:"var(--ink)" },
+        d.country.length > 20 ? d.country.slice(0,19)+"…" : d.country));
+      const bar = el("rect", { x:padL, y:y+4, width:w, height:14, rx:4, fill:m.col });
+      bar.setAttribute("shape-rendering","geometricPrecision");
+      g.appendChild(bar);
+      g.appendChild(el("text", { x:padL+w+8, y:y+15, "font-size":10.5, fill:"var(--ink-2)" },
+        fmt(d[metric], m.key==="total" ? 1 : 0)));
+      g.addEventListener("mousemove", e => showTip(e,
+        "<b>"+d.country+"</b>"+
+        '<span class="num">'+fmt(d.total,1)+" L de álcool puro</span><br>"+
+        '<span class="num">'+fmt(d.servings)+" doses no ano</span>"));
+      g.addEventListener("mouseleave", hideTip);
+      s.appendChild(g);
+    });
+    $("#chartRank").replaceChildren(s);
+  }
+
+  /* ---------- 5. composição ---------- */
+  function renderMix(){
+    const data = [...rows].filter(r => r.servings > 0).sort((a,b) => b.total - a.total).slice(0,12);
+    const W = 520, rowH = 30, padT = 8, padL = 150, padR = 20;
+    const H = padT + data.length*rowH + 6;
+    const plotW = W - padL - padR;
+    const s = newSvg(W, H);
+    s.setAttribute("aria-label", "Composição do consumo por bebida");
+
+    data.forEach((d,i) => {
+      const y = padT + i*rowH;
+      let acc = 0;
+      const g = el("g", {});
+      g.appendChild(el("text", { x:padL-12, y:y+18, "text-anchor":"end", "font-size":11, fill:"var(--ink)" },
+        d.country.length > 19 ? d.country.slice(0,18)+"…" : d.country));
+      FIELDS.forEach((f, fi) => {
+        const pct = d[f.key] / d.servings;
+        const w = pct * plotW;
+        if (w <= 0) return;
+        const gap = fi === FIELDS.length-1 ? 0 : 2;
+        const rect = el("rect", { x:padL+acc, y:y+6, width:Math.max(w-gap,1), height:16,
+          rx:3, fill:f.col });
+        g.appendChild(rect);
+        if (pct >= 0.08) g.appendChild(el("text", { x:padL+acc+w/2, y:y+18, "text-anchor":"middle",
+          "font-size":9.5, fill:f.key==="beer" ? "#1C2600" : "#fff", "font-weight":"700" }, Math.round(pct*100)+"%"));
+        acc += w;
+      });
+      g.addEventListener("mousemove", e => showTip(e, "<b>"+d.country+"</b>" +
+        FIELDS.map(f => '<i style="background:'+f.col+'"></i>'+f.label+": " +
+          '<span class="num">'+fmt(d[f.key])+" doses ("+Math.round(d[f.key]/d.servings*100)+"%)</span>").join("<br>")));
+      g.addEventListener("mouseleave", hideTip);
+      s.appendChild(g);
+    });
+    $("#chartMix").replaceChildren(s);
+  }
+
+  /* ---------- 6. dispersão ---------- */
+  function renderScatter(){
+    const data = rows.filter(r => r.servings > 0 || r.total > 0);
+    const W = 1100, H = 380, padL = 62, padR = 24, padT = 18, padB = 46;
+    const pw = W - padL - padR, ph = H - padT - padB;
+    const maxX = niceMax(Math.max(...data.map(d => d.servings), 1));
+    const maxY = niceMax(Math.max(...data.map(d => d.total), 1));
+    const X = v => padL + v/maxX*pw;
+    const Y = v => padT + ph - v/maxY*ph;
+
+    const s = newSvg(W, H);
+    s.setAttribute("aria-label", "Doses anuais contra litros de álcool puro, por país");
+    s.style.minWidth = "680px";
+
+    for (let i = 0; i <= 4; i++){
+      const gy = padT + ph*i/4;
+      s.appendChild(el("line", { x1:padL, y1:gy, x2:W-padR, y2:gy, class:"gridline", "stroke-width":1 }));
+      s.appendChild(el("text", { x:padL-10, y:gy+4, "text-anchor":"end", "font-size":10 }, fmt(maxY*(4-i)/4,1)));
+      const gx = padL + pw*i/4;
+      s.appendChild(el("text", { x:gx, y:H-24, "text-anchor":"middle", "font-size":10 }, fmt(maxX*i/4)));
+    }
+    s.appendChild(el("text", { x:padL, y:H-6, "font-size":10.5, fill:"var(--ink-3)" }, "Doses totais por ano  →"));
+    s.appendChild(el("text", { x:padL-46, y:padT+10, "font-size":10.5, fill:"var(--ink-3)",
+      transform:"rotate(-90 "+(padL-46)+" "+(padT+10)+")" }, "↑  Litros de álcool puro"));
+
+    // tendência (mínimos quadrados pela origem, robusta e honesta para essa relação)
+    const num = data.reduce((s2,d) => s2 + d.servings*d.total, 0);
+    const den = data.reduce((s2,d) => s2 + d.servings*d.servings, 0) || 1;
+    const slope = num/den;
+    const xEnd = slope > 0 ? Math.min(maxX, maxY/slope) : maxX;
+    s.appendChild(el("line", { x1:X(0), y1:Y(0), x2:X(xEnd), y2:Y(slope*xEnd),
+      stroke:"var(--ink-3)", "stroke-width":1.5, "stroke-dasharray":"5 5", opacity:.75 }));
+
+    data.forEach(d => {
+      const c = el("circle", { cx:X(d.servings), cy:Y(d.total), r:5,
+        fill:"var(--s-spirit)", "fill-opacity":.62, stroke:"var(--surface)", "stroke-width":1.5 });
+      c.addEventListener("mousemove", e => { c.setAttribute("r",7.5); c.setAttribute("fill-opacity",.95);
+        showTip(e, "<b>"+d.country+"</b>" +
+          '<span class="num">'+fmt(d.servings)+" doses · "+fmt(d.total,1)+" L de álcool puro</span>"); });
+      c.addEventListener("mouseleave", () => { c.setAttribute("r",5); c.setAttribute("fill-opacity",.62); hideTip(); });
+      s.appendChild(c);
+    });
+    $("#chartScatter").replaceChildren(s);
+  }
+
+  /* ---------- 7. tabela ---------- */
+  const COLS = [
+    { key:"country", label:"País",        type:"txt" },
+    { key:"beer",    label:"Cerveja",     col:"var(--s-beer)" },
+    { key:"spirit",  label:"Destilados",  col:"var(--s-spirit)" },
+    { key:"wine",    label:"Vinho",       col:"var(--s-wine)" },
+    { key:"servings",label:"Doses totais",col:"var(--ink-3)" },
+    { key:"total",   label:"Álcool puro (L)", col:"var(--navy)", dec:1 }
+  ];
+
+  function filtered(){
+    const q = query.trim().toLowerCase();
+    const out = q ? rows.filter(r => r.country.toLowerCase().includes(q)) : rows.slice();
+    out.sort((a,b) => sortKey === "country"
+      ? a.country.localeCompare(b.country, "pt-BR") * sortDir
+      : (a[sortKey] - b[sortKey]) * sortDir);
+    return out;
+  }
+
+  function renderTable(){
+    const data = filtered();
+    const maxes = {};
+    COLS.forEach(c => { if (c.type !== "txt") maxes[c.key] = Math.max(...rows.map(r => r[c.key]), 1); });
+
+    $("#table").querySelector("thead").innerHTML = "<tr>" + COLS.map(c => {
+      const active = c.key === sortKey;
+      return '<th data-k="'+c.key+'"'+(active?' aria-sort="'+(sortDir<0?"descending":"ascending")+'"':'')+'>' +
+        c.label + (active ? (sortDir<0?" ↓":" ↑") : "") + "</th>";
+    }).join("") + "</tr>";
+
+    $("#table").querySelector("tbody").innerHTML = data.map(r => "<tr>" + COLS.map(c => {
+      if (c.type === "txt") return "<td>" + r.country.replace(/</g,"&lt;") + "</td>";
+      const w = r[c.key] / maxes[c.key] * 100;
+      return '<td class="bar num'+(c.key==="total"?" rowtot":"")+'">' +
+        '<em style="background:'+c.col+'; width:'+w+'%"></em><span>' + fmt(r[c.key], c.dec||0) + "</span></td>";
+    }).join("") + "</tr>").join("");
+
+    $("#table").querySelectorAll("thead th").forEach(th => th.addEventListener("click", () => {
+      const k = th.dataset.k;
+      if (k === sortKey) sortDir *= -1; else { sortKey = k; sortDir = k === "country" ? 1 : -1; }
+      renderTable();
+    }));
+
+    $("#footCount").textContent = data.length === rows.length
+      ? fmt(rows.length) + " países"
+      : fmt(data.length) + " de " + fmt(rows.length) + " países";
+    $("#tableSub").textContent = "Todos os registros importados, com barra proporcional ao maior valor de cada coluna.";
+  }
+
+  $("#search").addEventListener("input", e => { query = e.target.value; renderTable(); });
+
+  function renderAll(){ renderKpis(); renderChips(); renderRank(); renderMix(); renderScatter(); renderTable(); }
+  addEventListener("resize", () => { if (rows.length) renderScatter(); });
+})();
+</script>
