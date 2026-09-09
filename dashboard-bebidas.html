@@ -854,7 +854,7 @@ tbody tr:hover{background:var(--surface-2)}
 
   let userCountry = null;
   let API_KEY = localStorage.getItem("gemini_api_key") || ""; // Loaded from localStorage or env
-  const MODELS = ["gemini-pro", "gemini-pro-vision"];
+  const MODELS = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
 
   // Fallback: try to load from .env
   (async () => {
