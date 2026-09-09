@@ -24,7 +24,10 @@
       "Bash(git commit -m 'Fix Gemini model names for API compatibility *)",
       "Bash(git commit -m 'Use latest Gemini models with proper API names *)",
       "Bash(chmod +x /Users/rodrigosilva/Documents/ClaudeProjects/Playground/build.sh)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git commit -m 'Update Gemini model names to working versions *)",
+      "Bash(git commit -m 'Use working Gemini model names \\(gemini-flash-latest\\) *)",
+      "Bash(node --check api/gemini.js)"
     ]
   }
 }

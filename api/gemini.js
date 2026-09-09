@@ -1,3 +1,5 @@
+export const config = { maxDuration: 60 };
+
 export default async function handler(req, res) {
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,7 +33,13 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 500 }
+          generationConfig: {
+            maxOutputTokens: 2048,
+            temperature: 0.3,
+            // Sem este budget o Gemini 2.5 Flash gasta a cota de saída "pensando"
+            // e devolve candidates sem parts (finishReason MAX_TOKENS).
+            thinkingConfig: { thinkingBudget: 0 }
+          }
         })
       }
     );
@@ -42,14 +50,18 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
+    const candidate = data.candidates && data.candidates[0];
+    const text = candidate?.content?.parts?.map(p => p.text).filter(Boolean).join('');
 
-    if (data.candidates && data.candidates[0].content.parts[0].text) {
-      return res.status(200).json({
-        text: data.candidates[0].content.parts[0].text
-      });
+    if (text) {
+      return res.status(200).json({ text });
     }
 
-    return res.status(400).json({ error: 'Invalid response from Gemini' });
+    return res.status(502).json({
+      error: 'Gemini respondeu sem texto',
+      finishReason: candidate?.finishReason,
+      promptFeedback: data.promptFeedback
+    });
   } catch (error) {
     console.error('Gemini API error:', error);
     return res.status(500).json({ error: error.message });
