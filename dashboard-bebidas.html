@@ -410,6 +410,26 @@ tbody tr:hover{background:var(--surface-2)}
   </div>
 </aside>
 
+<div class="support-modal" id="apiKeyModal">
+  <div class="support-modal-content">
+    <button class="close" id="closeAPIKey" aria-label="Fechar">&times;</button>
+    <h3>Configurar Chave de API Gemini</h3>
+    <form id="apiKeyForm">
+      <div class="form-group">
+        <label for="apiKeyInput">Chave de API</label>
+        <input type="password" id="apiKeyInput" placeholder="Cole sua chave aqui..." />
+        <small style="color:var(--ink-3); margin-top:6px; display:block;">
+          Obtenha em: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--citron);">aistudio.google.com/app/apikey</a>
+        </small>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn secondary" id="cancelAPIKey">Cancelar</button>
+        <button type="submit" class="btn">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="support-modal" id="supportModal">
   <div class="support-modal-content">
     <button class="close" id="closeSupport" aria-label="Fechar">&times;</button>
@@ -967,18 +987,17 @@ Analise os dados e responda em português de forma clara e concisa. Se perguntar
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  function showAPIKeyPrompt(){
-    const newKey = prompt(
-      "Adicione sua chave de API Gemini:\n\n" +
-      "Obtenha em: https://aistudio.google.com/app/apikey\n\n" +
-      "Chave atual: " + (API_KEY ? "✓ Configurada" : "✗ Não configurada"),
-      API_KEY
-    );
-    if(newKey !== null){
-      API_KEY = newKey.trim();
-      localStorage.setItem("gemini_api_key", API_KEY);
-      alert("✅ Chave de API salva em localStorage!");
-    }
+  function openAPIKeyModal(){
+    const modal = $("#apiKeyModal");
+    const input = $("#apiKeyInput");
+    input.value = API_KEY;
+    modal.classList.add("open");
+    input.focus();
+  }
+
+  function closeAPIKeyModal(){
+    const modal = $("#apiKeyModal");
+    modal.classList.remove("open");
   }
 
   function initChatUI(){
@@ -1022,7 +1041,30 @@ Analise os dados e responda em português de forma clara e concisa. Se perguntar
       toggleBtn.textContent = sidebar.classList.contains("minimized") ? "+" : "−";
     });
 
-    settingsBtn.addEventListener("click", showAPIKeyPrompt);
+    settingsBtn.addEventListener("click", openAPIKeyModal);
+
+    // API Key Modal handlers
+    const apiKeyModal = $("#apiKeyModal");
+    const apiKeyForm = $("#apiKeyForm");
+    const closeAPIKeyBtn = $("#closeAPIKey");
+    const cancelAPIKeyBtn = $("#cancelAPIKey");
+
+    closeAPIKeyBtn.addEventListener("click", closeAPIKeyModal);
+    cancelAPIKeyBtn.addEventListener("click", closeAPIKeyModal);
+    apiKeyModal.addEventListener("click", e => { if(e.target === apiKeyModal) closeAPIKeyModal(); });
+
+    apiKeyForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const newKey = $("#apiKeyInput").value.trim();
+      if(newKey){
+        API_KEY = newKey;
+        localStorage.setItem("gemini_api_key", API_KEY);
+        alert("✅ Chave de API salva com sucesso!");
+        closeAPIKeyModal();
+      }else{
+        alert("⚠️ Por favor, insira uma chave de API");
+      }
+    });
 
     renderChat();
   }
