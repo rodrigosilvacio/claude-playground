@@ -1,11 +1,5 @@
 {
-  "buildCommand": "node generate-env.js",
-  "outputDirectory": ".",
   "framework": "static",
-  "rewrites": [
-    {
-      "source": "/:path*",
-      "destination": "/dashboard-bebidas.html"
-    }
-  ]
+  "buildCommand": "",
+  "installCommand": ""
 }
