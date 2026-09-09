@@ -398,7 +398,10 @@ tbody tr:hover{background:var(--surface-2)}
 <aside class="ai-chat-sidebar" id="aiChatSidebar">
   <div class="ai-chat-header">
     <h3>Análise com IA</h3>
-    <button class="ai-chat-toggle" id="toggleChat" aria-label="Minimizar chat">−</button>
+    <div style="display:flex; gap:8px;">
+      <button class="ai-chat-toggle" id="settingsChat" aria-label="Configurações" title="Adicione sua chave de API">⚙️</button>
+      <button class="ai-chat-toggle" id="toggleChat" aria-label="Minimizar chat">−</button>
+    </div>
   </div>
   <div class="ai-chat-messages" id="chatMessages"></div>
   <div class="ai-chat-input-area">
@@ -828,8 +831,21 @@ tbody tr:hover{background:var(--surface-2)}
   /* ---------- AI Chat Integration ---------- */
 
   let userCountry = null;
-  const API_KEY = window.__GEMINI_API_KEY__ || ""; // Will be loaded from .env
+  let API_KEY = localStorage.getItem("gemini_api_key") || ""; // Loaded from localStorage or env
   const MODELS = ["gemini-2.0-pro", "gemini-1.5-pro", "gemini-1.5-flash"];
+
+  // Fallback: try to load from .env
+  (async () => {
+    if(!API_KEY){
+      try{
+        const res = await fetch("env.json");
+        if(res.ok){
+          const vars = await res.json();
+          API_KEY = vars.VITE_GEMINI_API_KEY || "";
+        }
+      }catch(e){}
+    }
+  })();
 
   async function detectUserLocation(){
     try{
@@ -951,10 +967,25 @@ Analise os dados e responda em português de forma clara e concisa. Se perguntar
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
+  function showAPIKeyPrompt(){
+    const newKey = prompt(
+      "Adicione sua chave de API Gemini:\n\n" +
+      "Obtenha em: https://aistudio.google.com/app/apikey\n\n" +
+      "Chave atual: " + (API_KEY ? "✓ Configurada" : "✗ Não configurada"),
+      API_KEY
+    );
+    if(newKey !== null){
+      API_KEY = newKey.trim();
+      localStorage.setItem("gemini_api_key", API_KEY);
+      alert("✅ Chave de API salva em localStorage!");
+    }
+  }
+
   function initChatUI(){
     const sendBtn = $("#sendChatBtn");
     const chatInput = $("#chatInput");
     const toggleBtn = $("#toggleChat");
+    const settingsBtn = $("#settingsChat");
     const sidebar = $("#aiChatSidebar");
 
     sendBtn.addEventListener("click", async () => {
@@ -990,6 +1021,8 @@ Analise os dados e responda em português de forma clara e concisa. Se perguntar
       sidebar.classList.toggle("minimized");
       toggleBtn.textContent = sidebar.classList.contains("minimized") ? "+" : "−";
     });
+
+    settingsBtn.addEventListener("click", showAPIKeyPrompt);
 
     renderChat();
   }
