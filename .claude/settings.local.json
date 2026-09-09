@@ -11,7 +11,20 @@
       "Bash(cp /private/tmp/claude-501/-Users-rodrigosilva-Documents-ClaudeProjects-Playground/680a885a-5600-4cdf-ae91-320c995bafdc/scratchpad/nitro-drinks-dashboard.html /Users/rodrigosilva/Documents/ClaudeProjects/Playground/dashboard-bebidas.html && ls -la /Users/rodrigosilva/Documents/ClaudeProjects/Playground)",
       "Bash(python3 -c ' *)",
       "Bash(file -I /Users/rodrigosilva/Documents/ClaudeProjects/Playground/dashboard-bebidas.html)",
-      "Bash(xxd)"
+      "Bash(xxd)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Add Gemini AI chat sidebar with geolocation and filter context *)",
+      "Bash(git push *)",
+      "Bash(git commit -m 'Add Vercel deployment configuration with environment variables *)",
+      "Bash(git commit -m 'Simplify Vercel configuration for static HTML deployment *)",
+      "Bash(git commit -m 'Add API key configuration UI for static deployment *)",
+      "Bash(git commit -m 'Reposition support button to top-left corner *)",
+      "Bash(git commit -m 'Fix chat sidebar layout and modal overflow *)",
+      "Bash(git commit -m 'Fix chat input area layout *)",
+      "Bash(git commit -m 'Fix Gemini model names for API compatibility *)",
+      "Bash(git commit -m 'Use latest Gemini models with proper API names *)",
+      "Bash(chmod +x /Users/rodrigosilva/Documents/ClaudeProjects/Playground/build.sh)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

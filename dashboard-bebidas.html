@@ -830,35 +830,12 @@ tbody tr:hover{background:var(--surface-2)}
   /* ---------- AI Chat Integration ---------- */
 
   let userCountry = null;
-  let API_KEY = "";
   const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+  const API_ENDPOINT = "/api/gemini";
 
-  // Carregar configuração do window.ENV (injetado no HTML ou do env.json no Vercel)
+  // Carregar configuração (apenas para info)
   async function loadConfig(){
-    // Primeiro tenta usar window.ENV (injetado no HTML)
-    if(window.ENV && window.ENV.VITE_GEMINI_API_KEY){
-      API_KEY = window.ENV.VITE_GEMINI_API_KEY;
-      console.log("✅ Configuração carregada de window.ENV");
-      return;
-    }
-
-    // Fallback: tenta carregar env.json (funciona em servidor HTTP)
-    try{
-      const res = await fetch("env.json");
-      if(res.ok){
-        const config = await res.json();
-        API_KEY = config.VITE_GEMINI_API_KEY || "";
-        if(API_KEY){
-          console.log("✅ Configuração carregada de env.json");
-        }else{
-          console.warn("⚠️ VITE_GEMINI_API_KEY não encontrada em env.json");
-        }
-      }else{
-        console.warn("⚠️ env.json não encontrado");
-      }
-    }catch(e){
-      console.warn("⚠️ Erro ao carregar env.json:", e.message);
-    }
+    console.log("✅ Usando API serverless para requisições Gemini");
   }
 
   async function detectUserLocation(){
@@ -894,13 +871,10 @@ tbody tr:hover{background:var(--surface-2)}
     for(const model of models){
       try{
         console.log(`📤 Tentando modelo: ${model}`);
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`, {
+        const res = await fetch(API_ENDPOINT, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 500 }
-          })
+          body: JSON.stringify({ prompt, model })
         });
         console.log(`📥 Resposta do ${model}:`, res.status, res.statusText);
         if(!res.ok) {
@@ -909,9 +883,9 @@ tbody tr:hover{background:var(--surface-2)}
           continue;
         }
         const data = await res.json();
-        if(data.candidates && data.candidates[0].content.parts[0].text){
+        if(data.text){
           console.log(`✅ Sucesso com ${model}`);
-          return data.candidates[0].content.parts[0].text;
+          return data.text;
         }
       }catch(e){
         console.warn(`❌ Modelo ${model} falhou:`, e);
@@ -929,10 +903,6 @@ tbody tr:hover{background:var(--surface-2)}
   }
 
   async function sendChatMessage(userMessage){
-    if(!API_KEY){
-      throw new Error("API_KEY não configurada. Verifique as variáveis de ambiente no Vercel.");
-    }
-
     const context = buildAIContext();
     const history = loadChatHistory();
 
@@ -1032,7 +1002,7 @@ Analise os dados e responda em português de forma clara e concisa. Se perguntar
   }
 
   async function initAI(){
-    await loadConfig(); // Carregar configuração
+    await loadConfig();
     const location = await detectUserLocation();
     if(location){
       userCountry = location.country;
@@ -1040,11 +1010,7 @@ Analise os dados e responda em português de forma clara e concisa. Se perguntar
       console.log("📍 Localização detectada:", userCountry);
     }
     initChatUI();
-    if(API_KEY){
-      console.log("✅ Chat pronto para usar");
-    }else{
-      console.error("❌ API_KEY não carregada. Configure VITE_GEMINI_API_KEY no Vercel");
-    }
+    console.log("✅ Chat pronto para usar");
   }
 
 
