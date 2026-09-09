@@ -27,7 +27,8 @@
       "Bash(git commit -m ' *)",
       "Bash(git commit -m 'Update Gemini model names to working versions *)",
       "Bash(git commit -m 'Use working Gemini model names \\(gemini-flash-latest\\) *)",
-      "Bash(node --check api/gemini.js)"
+      "Bash(node --check api/gemini.js)",
+      "Bash(node t.js)"
     ]
   }
 }

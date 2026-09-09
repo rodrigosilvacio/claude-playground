@@ -577,7 +577,7 @@ tbody tr:hover{background:var(--surface-2)}
       $("#panel").classList.remove("hidden");
       $("#fileMeta").classList.remove("hidden");
       $("#fileMeta").innerHTML =
-        '<span><strong>' + file.name.replace(/</g,"&lt;") + '</strong> · ' + fmt(rows.length) + ' países lidos</span>' +
+        '<span><strong>' + file.name.replace(/</g,"&lt;") + '</strong> · <span id="rowCount">' + fmt(rows.length) + '</span> países</span>' +
         '<button class="btn ghost small" id="btnSwap">Trocar arquivo</button>';
       $("#btnSwap").addEventListener("click", () => $("#fileInput").click());
       renderAll();
@@ -997,27 +997,101 @@ Contexto:
 ${context.userCountry ? `- País do usuário: ${context.userCountry}` : ""}
 ${context.userWeather ? `- Tempo agora no local do usuário: ${context.userWeather.temp}°C (máx ${context.userWeather.max}°, mín ${context.userWeather.min}°)` : ""}
 
-Analise os dados e responda em português de forma clara e concisa, em no máximo 5 frases. Se perguntarem sobre filtros, considere apenas os dados mostrados.`;
+Analise os dados e responda em português de forma clara e concisa, em no máximo 5 frases. Se perguntarem sobre filtros, considere apenas os dados mostrados.
 
-    const conversationHistory = history.map(m => ({
-      role: m.role === "user" ? "user" : "model",
-      parts: [{ text: m.content }]
-    }));
+Você também pode registrar países na base. Quando — e somente quando — tiver os quatro números do país, responda APENAS com este bloco, sem nenhum texto fora dele:
+\`\`\`json
+{"acao":"adicionar_pais","pais":"Nome do país","cerveja":0,"destilados":0,"vinho":0,"alcool_puro":0}
+\`\`\`
+Onde cerveja, destilados e vinho são doses anuais por pessoa (números inteiros) e alcool_puro são litros de álcool puro por ano (pode ter decimal).
+Se o usuário pedir para cadastrar um país mas faltar algum desses quatro números, NÃO emita o bloco: pergunte em português apenas o que falta.`;
 
-    conversationHistory.push({ role: "user", parts: [{ text: userMessage }] });
+    const prior = history.slice(0, -1).slice(-8)
+      .map(m => (m.role === "user" ? "Usuário" : "Assistente") + ": " + m.content)
+      .join("\n");
 
-    const fullPrompt = systemPrompt + "\n\n" + userMessage;
+    const fullPrompt = systemPrompt +
+      (prior ? "\n\nConversa até agora:\n" + prior : "") +
+      "\n\nUsuário: " + userMessage;
 
     try{
       const aiMessage = await callGeminiWithFallback(fullPrompt, MODELS);
 
-      history.push({ role: "assistant", content: aiMessage });
+      const action = parseAction(aiMessage);
+      const finalMessage = action ? applyAddCountry(action) : aiMessage;
+
+      history.push({ role: "assistant", content: finalMessage });
       saveChatHistory(history);
 
-      return aiMessage;
+      return finalMessage;
     }catch(e){
       throw new Error("Erro ao contatar IA: " + e.message);
     }
+  }
+
+  function parseAction(text){
+    const block = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if(!block) return null;
+    try{
+      const obj = JSON.parse(block[1].trim());
+      return obj && obj.acao === "adicionar_pais" ? obj : null;
+    }catch(e){
+      return null;
+    }
+  }
+
+  // Grava o país em `rows`, a única fonte de verdade dos gráficos.
+  function applyAddCountry(action){
+    const country = String(action.pais || "").trim();
+    if(!country) return "❌ Não consegui identificar o nome do país. Pode repetir?";
+
+    const fields = [
+      ["beer",   "cerveja",     action.cerveja],
+      ["spirit", "destilados",  action.destilados],
+      ["wine",   "vinho",       action.vinho],
+      ["total",  "álcool puro", action.alcool_puro]
+    ];
+    const values = {};
+    for(const [key, label, raw] of fields){
+      const n = Number(raw);
+      if(!Number.isFinite(n) || n < 0){
+        return `❌ O valor informado para **${label}** não é um número válido. Pode repetir?`;
+      }
+      values[key] = n;
+    }
+
+    const existing = rows.find(r => norm(r.country) === norm(country));
+    const record = {
+      country,
+      beer: values.beer, spirit: values.spirit, wine: values.wine,
+      servings: values.beer + values.spirit + values.wine,
+      total: values.total
+    };
+
+    let verb, name;
+    if(existing){
+      // mantém a grafia que veio da planilha em vez da digitada no chat
+      Object.assign(existing, record, { country: existing.country });
+      name = existing.country;
+      verb = "atualizado";
+    }else{
+      rows.push(record);
+      name = country;
+      verb = "adicionado";
+    }
+
+    renderAll();
+    updateRowCount();
+
+    return `✅ **${name}** ${verb}: ${fmt(record.beer)} doses de cerveja, ` +
+      `${fmt(record.spirit)} de destilados, ${fmt(record.wine)} de vinho e ` +
+      `${fmt(record.total, 1)} L de álcool puro.` +
+      (query ? `\n\nA busca por "${query}" está ativa — limpe o filtro para ver o país na tabela.` : "");
+  }
+
+  function updateRowCount(){
+    const el = $("#rowCount");
+    if(el) el.textContent = fmt(rows.length);
   }
 
   function renderChat(){
@@ -1025,7 +1099,7 @@ Analise os dados e responda em português de forma clara e concisa, em no máxim
     const history = loadChatHistory();
 
     if(history.length === 0){
-      messagesDiv.innerHTML = '<div class="ai-chat-loading">Bem-vindo! Faça perguntas sobre os dados...</div>';
+      messagesDiv.innerHTML = '<div class="ai-chat-loading">Pergunte sobre os dados — ou peça para registrar um novo país na base.</div>';
       return;
     }
 
