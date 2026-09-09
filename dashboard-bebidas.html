@@ -221,6 +221,64 @@ tbody tr:hover{background:var(--surface-2)}
 @keyframes fadeIn{from{opacity:0} to{opacity:1}}
 @keyframes slideUp{from{transform:translateY(20px); opacity:0} to{transform:translateY(0); opacity:1}}
 
+/* ---------- AI Chat Sidebar ---------- */
+.ai-chat-sidebar{
+  position:fixed; right:0; top:0; height:100vh; width:320px;
+  background:var(--surface); border-left:2px solid var(--line);
+  display:flex; flex-direction:column; z-index:55;
+  box-shadow:-2px 0 12px rgba(0,0,0,.1); transition:transform .3s ease;
+}
+.ai-chat-sidebar.minimized{transform:translateX(100%)}
+.ai-chat-header{
+  padding:16px; background:var(--navy); color:var(--on-navy);
+  border-bottom:1px solid var(--line); display:flex;
+  justify-content:space-between; align-items:center;
+}
+.ai-chat-header h3{margin:0; font-size:14px}
+.ai-chat-toggle{
+  background:none; border:none; color:var(--on-navy);
+  cursor:pointer; font-size:20px; padding:0; width:24px; height:24px;
+}
+.ai-chat-messages{
+  flex:1; overflow-y:auto; padding:12px;
+  display:flex; flex-direction:column; gap:8px;
+}
+.ai-chat-message{
+  padding:10px; border-radius:8px; font-size:13px; line-height:1.4; word-wrap:break-word;
+}
+.ai-chat-user{
+  background:var(--citron); color:#000; align-self:flex-end; max-width:85%;
+}
+.ai-chat-assistant{
+  background:var(--surface-2); color:var(--ink); align-self:flex-start; max-width:85%;
+}
+.ai-chat-input-area{
+  padding:12px; border-top:1px solid var(--line);
+  display:flex; gap:8px;
+}
+.ai-chat-input-area input{
+  flex:1; padding:8px 12px; border:1px solid var(--line);
+  border-radius:6px; font-family:inherit; font-size:13px;
+}
+.ai-chat-input-area button{
+  padding:8px 16px; background:var(--citron); border:none;
+  border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;
+}
+.ai-chat-input-area button:hover{opacity:.9}
+.ai-chat-loading{
+  padding:10px; background:var(--surface-2); border-radius:8px;
+  font-size:12px; color:var(--ink-3); font-style:italic;
+}
+.ai-chat-error{
+  padding:10px; background:#ffebee; border-radius:8px;
+  font-size:12px; color:#c62828;
+}
+@media (max-width:1280px){.ai-chat-sidebar{width:280px}}
+@media (max-width:768px){
+  .ai-chat-sidebar{width:100%; right:auto; left:0}
+  main.wrap{padding-right:0}
+}
+
 /* ---------- botão flutuante de suporte ---------- */
 .wa{
   position:fixed; right:22px; bottom:22px; z-index:60;
@@ -336,6 +394,18 @@ tbody tr:hover{background:var(--surface-2)}
   </div>
 </footer>
 
+<aside class="ai-chat-sidebar" id="aiChatSidebar">
+  <div class="ai-chat-header">
+    <h3>Análise com IA</h3>
+    <button class="ai-chat-toggle" id="toggleChat" aria-label="Minimizar chat">−</button>
+  </div>
+  <div class="ai-chat-messages" id="chatMessages"></div>
+  <div class="ai-chat-input-area">
+    <input type="text" id="chatInput" placeholder="Pergunte sobre os dados..." />
+    <button id="sendChatBtn" title="Enviar mensagem">Enviar</button>
+  </div>
+</aside>
+
 <div class="support-modal" id="supportModal">
   <div class="support-modal-content">
     <button class="close" id="closeSupport" aria-label="Fechar">&times;</button>
@@ -369,6 +439,27 @@ tbody tr:hover{background:var(--surface-2)}
 </button>
 
 <div class="tip" id="tip" role="status"></div>
+
+<script>
+// Load environment variables
+(async function(){
+  try{
+    const res = await fetch(".env");
+    const text = await res.text();
+    const lines = text.split("\n");
+    lines.forEach(line => {
+      if(line.trim() && !line.startsWith("#")){
+        const [key, value] = line.split("=");
+        if(key && value){
+          window["__" + key.trim() + "__"] = value.trim();
+        }
+      }
+    });
+  }catch(e){
+    console.warn("Não foi possível carregar .env:", e);
+  }
+})();
+</script>
 
 <script>
 (function(){
@@ -486,6 +577,7 @@ tbody tr:hover{background:var(--surface-2)}
         '<button class="btn ghost small" id="btnSwap">Trocar arquivo</button>';
       $("#btnSwap").addEventListener("click", () => $("#fileInput").click());
       renderAll();
+      initAI(); // Initialize AI chat after data loads
       $("#panel").scrollIntoView({ behavior:"smooth", block:"start" });
     };
     reader.readAsArrayBuffer(file);
@@ -734,6 +826,186 @@ tbody tr:hover{background:var(--surface-2)}
 
   function renderAll(){ renderKpis(); renderChips(); renderRank(); renderMix(); renderScatter(); renderTable(); }
   addEventListener("resize", () => { if (rows.length) renderScatter(); });
+
+  /* ---------- AI Chat Integration ---------- */
+
+  let userCountry = null;
+  const API_KEY = window.__GEMINI_API_KEY__ || ""; // Will be loaded from .env
+  const MODELS = ["gemini-2.0-pro", "gemini-1.5-pro", "gemini-1.5-flash"];
+
+  async function detectUserLocation(){
+    try{
+      const res = await fetch("https://ip-api.com/json/");
+      const data = await res.json();
+      if(data.status === "success") return { country: data.country, countryCode: data.countryCode };
+    }catch(e){}
+    return null;
+  }
+
+  function highlightUserCountryInRanking(country){
+    if(!country) return;
+    const countryRows = document.querySelectorAll("#chartRank text");
+    countryRows.forEach(row => {
+      if(row.textContent.includes(country)) row.parentElement.style.opacity = "1";
+    });
+  }
+
+  function buildAIContext(){
+    const filteredData = filtered();
+    return {
+      data: filteredData.slice(0, 20),
+      metric: metric,
+      query: query,
+      userCountry: userCountry,
+      totalRows: rows.length,
+      filteredRows: filteredData.length
+    };
+  }
+
+  async function callGeminiWithFallback(prompt, models){
+    for(const model of models){
+      try{
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 500 }
+          })
+        });
+        if(!res.ok) continue;
+        const data = await res.json();
+        if(data.candidates && data.candidates[0].content.parts[0].text){
+          return data.candidates[0].content.parts[0].text;
+        }
+      }catch(e){
+        console.warn(`Modelo ${model} falhou:`, e);
+      }
+    }
+    throw new Error("Todos os modelos falharam");
+  }
+
+  function saveChatHistory(messages){
+    localStorage.setItem("chatHistory", JSON.stringify(messages.slice(-15)));
+  }
+
+  function loadChatHistory(){
+    return JSON.parse(localStorage.getItem("chatHistory") || "[]");
+  }
+
+  async function sendChatMessage(userMessage){
+    if(!API_KEY){
+      throw new Error("Chave de API Gemini não configurada. Adicione VITE_GEMINI_API_KEY ao arquivo .env");
+    }
+
+    const context = buildAIContext();
+    const history = loadChatHistory();
+
+    const systemPrompt = `Você é um assistente especializado em análise de dados de consumo de bebidas alcoólicas globais.
+
+Dados atuais (${context.filteredRows} de ${context.totalRows} países):
+${JSON.stringify(context.data, null, 2)}
+
+Contexto:
+- Métrica em foco: ${context.metric}
+- Filtro de busca: "${context.query || "nenhum"}"
+${context.userCountry ? `- Seu país: ${context.userCountry}` : ""}
+
+Analise os dados e responda em português de forma clara e concisa. Se perguntarem sobre filtros, considere apenas os dados mostrados.`;
+
+    const conversationHistory = history.map(m => ({
+      role: m.role === "user" ? "user" : "model",
+      parts: [{ text: m.content }]
+    }));
+
+    conversationHistory.push({ role: "user", parts: [{ text: userMessage }] });
+
+    const fullPrompt = systemPrompt + "\n\n" + userMessage;
+
+    try{
+      const aiMessage = await callGeminiWithFallback(fullPrompt, MODELS);
+
+      history.push({ role: "user", content: userMessage });
+      history.push({ role: "assistant", content: aiMessage });
+      saveChatHistory(history);
+
+      return aiMessage;
+    }catch(e){
+      throw new Error("Erro ao contatar IA: " + e.message);
+    }
+  }
+
+  function renderChat(){
+    const messagesDiv = $("#chatMessages");
+    const history = loadChatHistory();
+
+    if(history.length === 0){
+      messagesDiv.innerHTML = '<div class="ai-chat-loading">Bem-vindo! Faça perguntas sobre os dados...</div>';
+      return;
+    }
+
+    messagesDiv.innerHTML = history.map(m => `
+      <div class="ai-chat-message ai-chat-${m.role}">
+        <p>${m.content.replace(/</g, "&lt;").replace(/\n/g, "<br>")}</p>
+      </div>
+    `).join("");
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  function initChatUI(){
+    const sendBtn = $("#sendChatBtn");
+    const chatInput = $("#chatInput");
+    const toggleBtn = $("#toggleChat");
+    const sidebar = $("#aiChatSidebar");
+
+    sendBtn.addEventListener("click", async () => {
+      const msg = chatInput.value.trim();
+      if(!msg) return;
+
+      chatInput.value = "";
+      const history = loadChatHistory();
+      history.push({ role: "user", content: msg });
+      saveChatHistory(history);
+      renderChat();
+
+      sendBtn.disabled = true;
+      try{
+        const response = await sendChatMessage(msg);
+        renderChat();
+      }catch(e){
+        const history = loadChatHistory();
+        history[history.length - 1] = { role: "assistant", content: "❌ " + e.message };
+        saveChatHistory(history);
+        renderChat();
+      }finally{
+        sendBtn.disabled = false;
+        chatInput.focus();
+      }
+    });
+
+    chatInput.addEventListener("keypress", e => {
+      if(e.key === "Enter" && !e.shiftKey) sendBtn.click();
+    });
+
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("minimized");
+      toggleBtn.textContent = sidebar.classList.contains("minimized") ? "+" : "−";
+    });
+
+    renderChat();
+  }
+
+  async function initAI(){
+    const location = await detectUserLocation();
+    if(location){
+      userCountry = location.country;
+      highlightUserCountryInRanking(location.country);
+      console.log("📍 Localização detectada:", userCountry);
+    }
+    initChatUI();
+  }
+
 
   /* ---------- modal de suporte ---------- */
   const supportModal = $("#supportModal");
