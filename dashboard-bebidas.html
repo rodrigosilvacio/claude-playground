@@ -256,15 +256,16 @@ tbody tr:hover{background:var(--surface-2)}
 }
 .ai-chat-input-area{
   padding:12px; border-top:1px solid var(--line);
-  display:flex; gap:8px;
+  display:flex; gap:8px; flex-shrink:0;
 }
 .ai-chat-input-area input{
-  flex:1; padding:8px 12px; border:1px solid var(--line);
+  flex:1; min-width:0; padding:8px 12px; border:1px solid var(--line);
   border-radius:6px; font-family:inherit; font-size:13px;
 }
 .ai-chat-input-area button{
-  padding:8px 16px; background:var(--citron); border:none;
+  padding:8px 12px; background:var(--citron); border:none;
   border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;
+  flex-shrink:0; white-space:nowrap;
 }
 .ai-chat-input-area button:hover{opacity:.9}
 .ai-chat-loading{
