@@ -400,10 +400,7 @@ tbody tr:hover{background:var(--surface-2)}
 <aside class="ai-chat-sidebar" id="aiChatSidebar">
   <div class="ai-chat-header">
     <h3>Análise com IA</h3>
-    <div style="display:flex; gap:8px;">
-      <button class="ai-chat-toggle" id="settingsChat" aria-label="Configurações" title="Adicione sua chave de API">⚙️</button>
-      <button class="ai-chat-toggle" id="toggleChat" aria-label="Minimizar chat">−</button>
-    </div>
+    <button class="ai-chat-toggle" id="toggleChat" aria-label="Minimizar chat">−</button>
   </div>
   <div class="ai-chat-messages" id="chatMessages"></div>
   <div class="ai-chat-input-area">
@@ -411,26 +408,6 @@ tbody tr:hover{background:var(--surface-2)}
     <button id="sendChatBtn" title="Enviar mensagem">Enviar</button>
   </div>
 </aside>
-
-<div class="support-modal" id="apiKeyModal">
-  <div class="support-modal-content">
-    <button class="close" id="closeAPIKey" aria-label="Fechar">&times;</button>
-    <h3>Configurar Chave de API Gemini</h3>
-    <form id="apiKeyForm">
-      <div class="form-group">
-        <label for="apiKeyInput">Chave de API</label>
-        <input type="password" id="apiKeyInput" placeholder="Cole sua chave aqui..." />
-        <small style="color:var(--ink-3); margin-top:6px; display:block;">
-          Obtenha em: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--citron);">aistudio.google.com/app/apikey</a>
-        </small>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn secondary" id="cancelAPIKey">Cancelar</button>
-        <button type="submit" class="btn">Salvar</button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <div class="support-modal" id="supportModal">
   <div class="support-modal-content">
@@ -853,21 +830,36 @@ tbody tr:hover{background:var(--surface-2)}
   /* ---------- AI Chat Integration ---------- */
 
   let userCountry = null;
-  let API_KEY = localStorage.getItem("gemini_api_key") || ""; // Loaded from localStorage or env
-  const MODELS = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
+  let API_KEY = "";
+  const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
 
-  // Fallback: try to load from .env
-  (async () => {
-    if(!API_KEY){
-      try{
-        const res = await fetch("env.json");
-        if(res.ok){
-          const vars = await res.json();
-          API_KEY = vars.VITE_GEMINI_API_KEY || "";
-        }
-      }catch(e){}
+  // Carregar configuração do window.ENV (injetado no HTML ou do env.json no Vercel)
+  async function loadConfig(){
+    // Primeiro tenta usar window.ENV (injetado no HTML)
+    if(window.ENV && window.ENV.VITE_GEMINI_API_KEY){
+      API_KEY = window.ENV.VITE_GEMINI_API_KEY;
+      console.log("✅ Configuração carregada de window.ENV");
+      return;
     }
-  })();
+
+    // Fallback: tenta carregar env.json (funciona em servidor HTTP)
+    try{
+      const res = await fetch("env.json");
+      if(res.ok){
+        const config = await res.json();
+        API_KEY = config.VITE_GEMINI_API_KEY || "";
+        if(API_KEY){
+          console.log("✅ Configuração carregada de env.json");
+        }else{
+          console.warn("⚠️ VITE_GEMINI_API_KEY não encontrada em env.json");
+        }
+      }else{
+        console.warn("⚠️ env.json não encontrado");
+      }
+    }catch(e){
+      console.warn("⚠️ Erro ao carregar env.json:", e.message);
+    }
+  }
 
   async function detectUserLocation(){
     try{
@@ -901,6 +893,7 @@ tbody tr:hover{background:var(--surface-2)}
   async function callGeminiWithFallback(prompt, models){
     for(const model of models){
       try{
+        console.log(`📤 Tentando modelo: ${model}`);
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -909,13 +902,19 @@ tbody tr:hover{background:var(--surface-2)}
             generationConfig: { maxOutputTokens: 500 }
           })
         });
-        if(!res.ok) continue;
+        console.log(`📥 Resposta do ${model}:`, res.status, res.statusText);
+        if(!res.ok) {
+          const errorData = await res.json();
+          console.warn(`❌ Erro ${model}:`, errorData);
+          continue;
+        }
         const data = await res.json();
         if(data.candidates && data.candidates[0].content.parts[0].text){
+          console.log(`✅ Sucesso com ${model}`);
           return data.candidates[0].content.parts[0].text;
         }
       }catch(e){
-        console.warn(`Modelo ${model} falhou:`, e);
+        console.warn(`❌ Modelo ${model} falhou:`, e);
       }
     }
     throw new Error("Todos os modelos falharam");
@@ -931,7 +930,7 @@ tbody tr:hover{background:var(--surface-2)}
 
   async function sendChatMessage(userMessage){
     if(!API_KEY){
-      throw new Error("Chave de API Gemini não configurada. Adicione VITE_GEMINI_API_KEY ao arquivo .env");
+      throw new Error("API_KEY não configurada. Verifique as variáveis de ambiente no Vercel.");
     }
 
     const context = buildAIContext();
@@ -961,7 +960,6 @@ Analise os dados e responda em português de forma clara e concisa. Se perguntar
     try{
       const aiMessage = await callGeminiWithFallback(fullPrompt, MODELS);
 
-      history.push({ role: "user", content: userMessage });
       history.push({ role: "assistant", content: aiMessage });
       saveChatHistory(history);
 
@@ -987,19 +985,6 @@ Analise os dados e responda em português de forma clara e concisa. Se perguntar
     `).join("");
 
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
-
-  function openAPIKeyModal(){
-    const modal = $("#apiKeyModal");
-    const input = $("#apiKeyInput");
-    input.value = API_KEY;
-    modal.classList.add("open");
-    input.focus();
-  }
-
-  function closeAPIKeyModal(){
-    const modal = $("#apiKeyModal");
-    modal.classList.remove("open");
   }
 
   function initChatUI(){
@@ -1043,35 +1028,11 @@ Analise os dados e responda em português de forma clara e concisa. Se perguntar
       toggleBtn.textContent = sidebar.classList.contains("minimized") ? "+" : "−";
     });
 
-    settingsBtn.addEventListener("click", openAPIKeyModal);
-
-    // API Key Modal handlers
-    const apiKeyModal = $("#apiKeyModal");
-    const apiKeyForm = $("#apiKeyForm");
-    const closeAPIKeyBtn = $("#closeAPIKey");
-    const cancelAPIKeyBtn = $("#cancelAPIKey");
-
-    closeAPIKeyBtn.addEventListener("click", closeAPIKeyModal);
-    cancelAPIKeyBtn.addEventListener("click", closeAPIKeyModal);
-    apiKeyModal.addEventListener("click", e => { if(e.target === apiKeyModal) closeAPIKeyModal(); });
-
-    apiKeyForm.addEventListener("submit", e => {
-      e.preventDefault();
-      const newKey = $("#apiKeyInput").value.trim();
-      if(newKey){
-        API_KEY = newKey;
-        localStorage.setItem("gemini_api_key", API_KEY);
-        alert("✅ Chave de API salva com sucesso!");
-        closeAPIKeyModal();
-      }else{
-        alert("⚠️ Por favor, insira uma chave de API");
-      }
-    });
-
     renderChat();
   }
 
   async function initAI(){
+    await loadConfig(); // Carregar configuração
     const location = await detectUserLocation();
     if(location){
       userCountry = location.country;
@@ -1079,6 +1040,11 @@ Analise os dados e responda em português de forma clara e concisa. Se perguntar
       console.log("📍 Localização detectada:", userCountry);
     }
     initChatUI();
+    if(API_KEY){
+      console.log("✅ Chat pronto para usar");
+    }else{
+      console.error("❌ API_KEY não carregada. Configure VITE_GEMINI_API_KEY no Vercel");
+    }
   }
 
 
