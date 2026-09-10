@@ -1197,12 +1197,9 @@ Se o usuário pedir para cadastrar um país mas faltar algum desses quatro núme
 
 
   /* ---------- modal de suporte ---------- */
-  // Chave "publishable" do Supabase: feita para rodar no navegador. Quem protege os
-  // dados é a RLS da tabela, que só permite INSERT anônimo — não dá para ler ticket
-  // de ninguém com esta chave.
-  const SUPABASE_URL = "https://xtrvojnauvkkterogrst.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_JmhdMN8S7lSpCeaJANw_lQ_RRwZ2_OT";
-  const TICKETS_TABLE = "bebidas_suporte_tickets";
+  // A gravação no Supabase e o aviso por e-mail acontecem no servidor, em
+  // /api/support — assim a chave do Resend nunca chega ao navegador.
+  const SUPPORT_ENDPOINT = "/api/support";
 
   const supportModal = $("#supportModal");
   const supportForm = $("#supportForm");
@@ -1245,20 +1242,16 @@ Se o usuário pedir para cadastrar um país mas faltar algum desses quatro núme
     supportSubmit.textContent = "Enviando…";
 
     try{
-      const res = await fetch(SUPABASE_URL + "/rest/v1/" + TICKETS_TABLE, {
+      const res = await fetch(SUPPORT_ENDPOINT, {
         method: "POST",
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Authorization": "Bearer " + SUPABASE_KEY,
-          "Content-Type": "application/json",
-          "Prefer": "return=minimal"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nome, email, mensagem })
       });
 
-      if(!res.ok){
-        const detail = await res.json().catch(() => ({}));
-        throw new Error(detail.message || detail.hint || "HTTP " + res.status);
+      const retorno = await res.json().catch(() => ({}));
+      if(!res.ok) throw new Error(retorno.error || "HTTP " + res.status);
+      if(retorno.email && retorno.email.erros.length){
+        console.warn("Ticket gravado, mas o e-mail não saiu por completo:", retorno.email.erros);
       }
 
       setStatus("ok", "Seu ticket foi endereçado");

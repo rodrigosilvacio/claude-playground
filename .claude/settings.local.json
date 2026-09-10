@@ -39,7 +39,11 @@
       "Read(//tmp/**)",
       "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" \"https://xtrvojnauvkkterogrst.supabase.co/rest/v1/bebidas_suporte_tickets?select=*\" -H \"apikey: sb_publishable_JmhdMN8S7lSpCeaJANw_lQ_RRwZ2_OT\" -H \"Authorization: Bearer sb_publishable_JmhdMN8S7lSpCeaJANw_lQ_RRwZ2_OT\")",
       "mcp__1efd67d6-c55d-432d-b081-9cd081f6f12f__execute_sql",
-      "mcp__1efd67d6-c55d-432d-b081-9cd081f6f12f__get_advisors"
+      "mcp__1efd67d6-c55d-432d-b081-9cd081f6f12f__get_advisors",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(gh issue create --title 'Fazer integração com o Resend' --body ' *)",
+      "Bash(gh issue *)"
     ]
   }
 }
