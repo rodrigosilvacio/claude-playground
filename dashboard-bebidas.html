@@ -211,6 +211,17 @@ tbody tr:hover{background:var(--surface-2)}
   outline:none; border-color:var(--citron); background:var(--surface);
 }
 .support-modal textarea{resize:vertical; min-height:100px}
+.support-modal .form-status{
+  display:none; margin:0; padding:11px 13px; border-radius:8px; font-size:12.5px; line-height:1.5;
+}
+.support-modal .form-status.on{display:block}
+.support-modal .form-status.ok{
+  background:rgba(148,195,86,.18); color:var(--ink); border-left:3px solid var(--chartreuse);
+}
+.support-modal .form-status.err{
+  background:rgba(192,57,43,.09); color:var(--ink); border-left:3px solid #C0392B;
+}
+.support-modal .btn[disabled]{opacity:.55; cursor:not-allowed}
 .support-modal .form-actions{display:flex; gap:12px; margin-top:24px}
 .support-modal .btn{flex:1}
 .support-modal .btn.secondary{background:var(--surface-2); color:var(--ink-2)}
@@ -448,9 +459,10 @@ tbody tr:hover{background:var(--surface-2)}
         <label for="supportMessage">Descrição</label>
         <textarea id="supportMessage" name="message" required placeholder="Descreva seu problema ou dúvida..."></textarea>
       </div>
+      <p class="form-status" id="supportStatus" role="status"></p>
       <div class="form-actions">
         <button type="button" class="btn secondary" id="cancelSupport">Cancelar</button>
-        <button type="submit" class="btn">Enviar</button>
+        <button type="submit" class="btn" id="supportSubmit">Enviar</button>
       </div>
     </form>
   </div>
@@ -1185,39 +1197,80 @@ Se o usuário pedir para cadastrar um país mas faltar algum desses quatro núme
 
 
   /* ---------- modal de suporte ---------- */
+  // Chave "publishable" do Supabase: feita para rodar no navegador. Quem protege os
+  // dados é a RLS da tabela, que só permite INSERT anônimo — não dá para ler ticket
+  // de ninguém com esta chave.
+  const SUPABASE_URL = "https://xtrvojnauvkkterogrst.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_JmhdMN8S7lSpCeaJANw_lQ_RRwZ2_OT";
+  const TICKETS_TABLE = "bebidas_suporte_tickets";
+
   const supportModal = $("#supportModal");
   const supportForm = $("#supportForm");
   const btnSuporte = $("#btnSuporte");
   const closeSupport = $("#closeSupport");
   const cancelSupport = $("#cancelSupport");
+  const supportStatus = $("#supportStatus");
+  const supportSubmit = $("#supportSubmit");
 
-  function openSupport(){ supportModal.classList.add("open"); }
-  function closeModal(){ supportModal.classList.remove("open"); supportForm.reset(); }
+  function setStatus(kind, text){
+    supportStatus.className = "form-status on " + kind;
+    supportStatus.textContent = text;
+  }
+  function clearStatus(){
+    supportStatus.className = "form-status";
+    supportStatus.textContent = "";
+  }
+
+  function openSupport(){ clearStatus(); supportModal.classList.add("open"); }
+  function closeModal(){ supportModal.classList.remove("open"); supportForm.reset(); clearStatus(); }
 
   btnSuporte.addEventListener("click", openSupport);
   closeSupport.addEventListener("click", closeModal);
   cancelSupport.addEventListener("click", closeModal);
   supportModal.addEventListener("click", e => { if (e.target === supportModal) closeModal(); });
 
-  supportForm.addEventListener("submit", e => {
+  supportForm.addEventListener("submit", async e => {
     e.preventDefault();
-    const name = document.getElementById("supportName").value.trim();
-    const email = document.getElementById("supportEmail").value.trim();
-    const message = document.getElementById("supportMessage").value.trim();
+    const nome = $("#supportName").value.trim();
+    const email = $("#supportEmail").value.trim();
+    const mensagem = $("#supportMessage").value.trim();
 
-    if (!name || !email || !message){ alert("Por favor, preencha todos os campos."); return; }
+    if(!nome || !email || !mensagem){
+      setStatus("err", "Preencha todos os campos antes de enviar.");
+      return;
+    }
 
-    const data = { name, email, message, timestamp: new Date().toISOString() };
-    console.log("Suporte enviado:", data);
+    clearStatus();
+    supportSubmit.disabled = true;
+    supportSubmit.textContent = "Enviando…";
 
-    // Armazenar no localStorage como backup
-    let submissions = JSON.parse(localStorage.getItem("supportSubmissions") || "[]");
-    submissions.push(data);
-    localStorage.setItem("supportSubmissions", JSON.stringify(submissions));
+    try{
+      const res = await fetch(SUPABASE_URL + "/rest/v1/" + TICKETS_TABLE, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({ nome, email, mensagem })
+      });
 
-    // Feedback ao usuário
-    alert("✓ Sua mensagem foi enviada! Entraremos em contato em breve.");
-    closeModal();
+      if(!res.ok){
+        const detail = await res.json().catch(() => ({}));
+        throw new Error(detail.message || detail.hint || "HTTP " + res.status);
+      }
+
+      setStatus("ok", "Seu ticket foi endereçado");
+      supportForm.reset();
+      setTimeout(closeModal, 2500);
+    }catch(err){
+      console.error("Falha ao registrar ticket:", err);
+      setStatus("err", "Não foi possível registrar seu ticket (" + err.message + "). Tente novamente.");
+    }finally{
+      supportSubmit.disabled = false;
+      supportSubmit.textContent = "Enviar";
+    }
   });
 })();
 </script>
